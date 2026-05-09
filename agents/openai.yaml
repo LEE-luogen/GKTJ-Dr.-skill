@@ -1,0 +1,4 @@
+interface:
+  display_name: "Doctor Survey Reports"
+  short_description: "Generate doctor-facing questionnaire analysis reports with charts and docx output"
+  default_prompt: "Generate a doctor-facing questionnaire analysis report from the uploaded survey data, including markdown, charts, and a Word document."

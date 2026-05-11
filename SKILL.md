@@ -1,5 +1,5 @@
 ---
-name: "doctor-survey-report-generator"
+name: "GKTJ-Dr.-skill"
 description: "Use when generating doctor-facing questionnaire analysis reports from uploaded survey spreadsheets or questionnaire tables, especially when the output must include fixed sections, consistent charts, controlled Word typography, and strict medical/pharmaceutical compliance constraints."
 ---
 

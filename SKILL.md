@@ -1,12 +1,12 @@
 ---
 name: "doctor-survey-report-generator"
-description: "Use when generating doctor-facing questionnaire analysis reports from uploaded survey spreadsheets or questionnaire tables, especially when the output must include fixed sections, consistent charts, a Word cover page, and strict medical/pharmaceutical compliance constraints."
+description: "Use when generating doctor-facing questionnaire analysis reports from uploaded survey spreadsheets or questionnaire tables, especially when the output must include fixed sections, consistent charts, controlled Word typography, and strict medical/pharmaceutical compliance constraints."
 ---
 
 # Doctor Survey Report Generator
 
 ## Overview
-This skill generates doctor-facing questionnaire analysis reports with a fixed structure, consistent chart style, and `.docx` output. It is designed for workflows where the user provides a product, region, optional time, and questionnaire data attachment, and expects a reproducible report rather than free-form writing.
+This skill generates doctor-facing questionnaire analysis reports with a fixed structure, consistent chart style, explicit Word typography, and `.docx` output. It is designed for workflows where the user provides a product, region, optional time, and questionnaire data attachment, and expects a reproducible report rather than free-form writing.
 
 ## When to Use
 - Uploaded attachment contains questionnaire data, especially `.xlsx`, `.csv`, or copied survey tables.
@@ -15,6 +15,7 @@ This skill generates doctor-facing questionnaire analysis reports with a fixed s
 - Every question in chapter 2 needs a matching chart.
 - Medical/pharmaceutical tone and doctor viewpoint must stay consistent across the whole report.
 - The user wants `.md` and `.docx` artifacts, not just chat output.
+- Speed and consistency matter more than decorative cover output.
 
 Do not use this skill for patient experience reports, clinical trial manuscripts, or unstructured brainstorming.
 
@@ -41,10 +42,13 @@ Do not use this skill for patient experience reports, clinical trial manuscripts
      - chapter 2 clinical interpretation
      - chapter 3 summary wording
      - chapter 4 action verbs
-5. Build a report payload JSON.
-   - Use the schema in `references/report-payload-schema.md`.
+5. Build a report payload JSON through a script, not by hand.
+   - AI should first write a structured intermediate draft such as `report_content.md` or `report_content.jsonl`.
+   - Use `scripts/build_payload.py` to convert that intermediate draft plus `questionnaire.json` into a valid `report_payload.json`.
+   - Use the schema and intermediate draft rules in `references/report-payload-schema.md`.
 6. Render artifacts.
    - Use `scripts/render_report.py` to generate charts, markdown, docx, and a summary JSON.
+   - The default renderer starts directly from正文首页 and does not generate a cover page.
 7. Verify before delivery.
    - Chart count must equal chapter 2 question count.
    - Attachment must preserve original question and option meaning.
@@ -76,6 +80,9 @@ Do not use this skill for patient experience reports, clinical trial manuscripts
 ## Scripts
 - `scripts/parse_questionnaire.py`
   - Reads questionnaire spreadsheets and emits normalized JSON.
+- `scripts/build_payload.py`
+  - Reads `questionnaire.json` plus structured report content and emits a validated `report_payload.json`.
+  - This is the default path. Do not ask the model to handwrite a large JSON payload unless you explicitly need the emergency fallback path.
 - `scripts/render_report.py`
   - Reads a structured report payload JSON and generates:
     - `report_draft.md`
@@ -83,12 +90,17 @@ Do not use this skill for patient experience reports, clinical trial manuscripts
     - charts
     - `.docx`
     - `report_summary.json`
+  - Uses explicit styles instead of relying on Word built-in heading visuals:
+    - 一级标题：宋体 20pt 加粗绿色
+    - 二级标题：宋体 16pt 加粗黑色
+    - 正文：宋体 14pt，首行缩进 28pt，1.5 倍行距
 
 ## Expected File Flow
 - Input:
   - attachment spreadsheet
 - Intermediate:
   - `questionnaire.json`
+  - `report_content.md` or `report_content.jsonl`
   - `report_payload.json`
 - Output:
   - `report_draft.md`
@@ -103,6 +115,14 @@ Do not use this skill for patient experience reports, clinical trial manuscripts
 - Giving chapter 4 generic advice that does not correspond to chapter 3.2.
 - Turning questionnaire feedback into efficacy proof.
 - Forgetting that every chapter 2 item needs one chart and only one chart.
+- Asking the model to handwrite a long `report_payload.json` with many Chinese paragraphs.
+- Letting the model manage quote escaping or newline escaping inside JSON strings.
+- Calling an obsolete local copy of the skill instead of the `GKTJ-Dr.-skill` source-of-truth directory.
+
+## Emergency Fallback
+- If a direct JSON payload is absolutely necessary, use a fenced ` ```json ` block or a `.json` file only.
+- Validate it with `json.loads` before passing it to `scripts/render_report.py`.
+- Prefer the default `report_content.* -> build_payload.py -> report_payload.json` chain whenever possible.
 
 ## Final Delivery
 Reply with:

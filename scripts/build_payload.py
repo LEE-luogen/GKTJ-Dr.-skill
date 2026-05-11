@@ -91,14 +91,17 @@ def split_blocks(lines: list[str]) -> list[str]:
 
 def parse_label_body_blocks(lines: list[str], section_name: str) -> list[dict]:
     items = []
-    for block in split_blocks(lines):
-        block = re.sub(r"^[-*]\s*", "", block)
-        if "：" in block:
-            title, body = block.split("：", 1)
-        elif ":" in block:
-            title, body = block.split(":", 1)
+    for raw in lines:
+        stripped = raw.strip()
+        if not stripped:
+            continue
+        stripped = re.sub(r"^[-*]\s*", "", stripped)
+        if "：" in stripped:
+            title, body = stripped.split("：", 1)
+        elif ":" in stripped:
+            title, body = stripped.split(":", 1)
         else:
-            raise ValueError(f"{section_name} block missing colon separator: {block}")
+            raise ValueError(f"{section_name} block missing colon separator: {stripped}")
         items.append({"title": normalize_space(title), "body": normalize_space(body)})
     return items
 
@@ -145,6 +148,9 @@ def parse_markdown_content(path: Path) -> tuple[dict, dict]:
             if "数据信息分析" in title:
                 flush_item()
                 current_section = "data_analysis"
+                continue
+            if "反馈意见分析" in title:
+                flush_item()
                 continue
             if "积极反馈" in title:
                 flush_item()

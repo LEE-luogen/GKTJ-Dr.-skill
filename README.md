@@ -1,4 +1,4 @@
-# doctor-survey-report-generator
+# GKTJ-Dr.-skill
 
 A reusable skill for generating doctor-facing questionnaire analysis reports with:
 
